@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  flutter:
+    image: ghcr.io/cirruslabs/flutter:latest
+    container_name: evalua_flutter
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: >
+      bash -c "flutter pub get &&
+               flutter run -d web-server
+               --web-port=8080
+               --web-hostname=0.0.0.0"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    container_name: evalua_backend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8888:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:1234@db:5432/evaluaplus
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    container_name: evalua_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: evaluaplus
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
