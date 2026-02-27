@@ -1,13 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine, Base
-import models
-
 from routers.items import router as items_router
 
 app = FastAPI()
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,10 +12,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Crear tablas
-Base.metadata.create_all(bind=engine)
-
-# Registrar routers
 app.include_router(items_router)
 
 @app.get("/")
