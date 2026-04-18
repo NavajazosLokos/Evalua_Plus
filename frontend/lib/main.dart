@@ -16,9 +16,20 @@ class EvaluaPlusApp extends StatelessWidget {
       title: 'EvaluaPlus',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2563EB),
+          brightness: Brightness.light,
+        ),
         useMaterial3: true,
         fontFamily: 'Roboto',
+        iconTheme: const IconThemeData(
+          color: Color(0xFF64748B),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          iconColor: Color(0xFF64748B),
+          prefixIconColor: Color(0xFF64748B),
+          suffixIconColor: Color(0xFF64748B),
+        ),
       ),
       home: const _SplashRouter(),
       routes: {
