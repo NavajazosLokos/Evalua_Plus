@@ -12,11 +12,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _mostrarRegistro = false;
-  final _nameController = TextEditingController();
 
   @override
   void dispose() {
@@ -28,11 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
     Map<String, dynamic> resultado;
-
     if (_mostrarRegistro) {
       resultado = await AuthService.registro(
         _nameController.text.trim(),
@@ -47,18 +45,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = false);
-
     if (!mounted) return;
 
     if (resultado['success']) {
       if (_mostrarRegistro) {
-        // Después de registrarse, ir al login
         setState(() => _mostrarRegistro = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cuenta creada. Inicia sesión.')),
         );
       } else {
-        // Ir a la pantalla principal
         Navigator.pushReplacementNamed(context, '/home');
       }
     } else {
@@ -90,8 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Logo / Título
-                      const Icon(Icons.analytics_outlined, size: 56, color: Color(0xFF2563EB)),
+                      const Text('📊', style: TextStyle(fontSize: 52)),
                       const SizedBox(height: 12),
                       Text(
                         'EvaluaPlus',
@@ -107,21 +101,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 28),
 
-                      // Campo nombre (solo en registro)
                       if (_mostrarRegistro) ...[
                         TextFormField(
                           controller: _nameController,
-                          decoration: _inputDecoration('Nombre completo', Icons.person_outline),
+                          decoration: _inputDecoration('Nombre completo', '👤'),
                           validator: (v) => v == null || v.isEmpty ? 'Ingresa tu nombre' : null,
                         ),
                         const SizedBox(height: 16),
                       ],
 
-                      // Campo email
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: _inputDecoration('Correo electrónico', Icons.email_outlined),
+                        decoration: _inputDecoration('Correo electrónico', '📧'),
                         validator: (v) {
                           if (v == null || v.isEmpty) return 'Ingresa tu correo';
                           if (!v.contains('@')) return 'Correo inválido';
@@ -130,16 +122,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Campo contraseña
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: _inputDecoration(
                           'Contraseña',
-                          Icons.lock_outline,
-                          suffix: IconButton(
-                            icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          '🔒',
+                          suffix: TextButton(
                             onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            child: Text(
+                              _obscurePassword ? 'Ver' : 'Ocultar',
+                              style: const TextStyle(color: Color(0xFF2563EB)),
+                            ),
                           ),
                         ),
                         validator: (v) {
@@ -150,7 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 28),
 
-                      // Botón principal
                       SizedBox(
                         width: double.infinity,
                         height: 48,
@@ -163,8 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           child: _isLoading
                               ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
+                                  height: 20, width: 20,
                                   child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                 )
                               : Text(
@@ -175,7 +167,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Cambiar entre login y registro
                       TextButton(
                         onPressed: () => setState(() => _mostrarRegistro = !_mostrarRegistro),
                         child: Text(
@@ -196,10 +187,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String label, IconData icon, {Widget? suffix}) {
+  InputDecoration _inputDecoration(String label, String emoji, {Widget? suffix}) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon, color: Colors.grey),
+      prefixText: '$emoji  ',
       suffixIcon: suffix,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       enabledBorder: OutlineInputBorder(

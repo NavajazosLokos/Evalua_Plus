@@ -7,18 +7,7 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - flutter_builder
       - backend
-
-  flutter_builder:
-    image: ghcr.io/cirruslabs/flutter:latest
-    container_name: evalua_flutter_builder
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    command: >
-      bash -c "flutter pub get &&
-               flutter build web"
 
   backend:
     build: ./backend
