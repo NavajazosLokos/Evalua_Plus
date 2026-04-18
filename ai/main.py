@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from PIL import Image
 import io
@@ -5,9 +6,20 @@ import numpy as np
 
 app = FastAPI(title="EvaluaPlus AI Service")
 
+EXTENSIONES_VALIDAS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif"}
+
+
+def es_imagen_valida(file: UploadFile) -> bool:
+    if file.content_type and file.content_type.startswith("image/"):
+        return True
+    if file.filename:
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext in EXTENSIONES_VALIDAS:
+            return True
+    return False
+
 
 def clasificar_estado(porcentaje: float) -> str:
-    """Clasifica el estado del material según el porcentaje de deterioro."""
     if porcentaje <= 20:
         return "Excelente"
     elif porcentaje <= 50:
@@ -23,17 +35,7 @@ def health_check():
 
 @app.post("/analizar")
 async def analizar_imagen(file: UploadFile = File(...)):
-    """
-    Recibe una imagen y devuelve el análisis de deterioro del material.
-
-    Retorna:
-    - porcentaje_deterioro: float entre 0 y 100
-    - estado: Excelente / Aceptable / Deteriorado
-    - zonas_danadas: lista de zonas detectadas (cuando el modelo esté integrado)
-    """
-
-    # Validar que sea una imagen
-    if not file.content_type.startswith("image/"):
+    if not es_imagen_valida(file):
         raise HTTPException(status_code=400, detail="El archivo debe ser una imagen.")
 
     try:
@@ -43,19 +45,7 @@ async def analizar_imagen(file: UploadFile = File(...)):
     except Exception:
         raise HTTPException(status_code=400, detail="No se pudo procesar la imagen.")
 
-    # -------------------------------------------------------
-    # TODO: Aquí va la inferencia real con Anomalib
-    # Una vez que tengan el modelo entrenado, reemplazar este
-    # bloque con la inferencia real. Ejemplo:
-    #
-    # from anomalib.deploy import TorchInferencer
-    # inferencer = TorchInferencer(path="model/model.pt")
-    # predictions = inferencer.predict(image=img_array)
-    # porcentaje = float(predictions.pred_score * 100)
-    # zonas = predictions.anomaly_map.tolist()
-    # -------------------------------------------------------
-
-    # Respuesta placeholder mientras se integra el modelo
+    # TODO: Reemplazar con inferencia real de Anomalib cuando el modelo esté entrenado
     porcentaje_deterioro = 0.0
     zonas_danadas = []
 

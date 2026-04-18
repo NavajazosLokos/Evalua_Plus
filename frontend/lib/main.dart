@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
 import 'services/auth_service.dart';
 
 void main() {
@@ -22,16 +23,12 @@ class EvaluaPlusApp extends StatelessWidget {
       home: const _SplashRouter(),
       routes: {
         '/login': (context) => const LoginScreen(),
-        // TODO: agregar las demás pantallas aquí
-        // '/home': (context) => const HomeScreen(),
-        // '/resultado': (context) => const ResultadoScreen(),
-        // '/historial': (context) => const HistorialScreen(),
+        '/home': (context) => const HomeScreen(),
       },
     );
   }
 }
 
-// Decide a dónde mandar al usuario al abrir la app
 class _SplashRouter extends StatefulWidget {
   const _SplashRouter();
 
@@ -63,9 +60,7 @@ class _SplashRouterState extends State<_SplashRouter> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }
