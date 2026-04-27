@@ -31,6 +31,8 @@ services:
       - "8001:8001"
     volumes:
       - ./ai:/app
+    environment:
+      - TRUST_REMOTE_CODE=1
     restart: unless-stopped
 
   db:

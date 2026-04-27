@@ -15,16 +15,22 @@ class _HomeScreenState extends State<HomeScreen> {
   Uint8List? _imagenBytes;
   String? _nombreArchivo;
   bool _analizando = false;
+  bool _cargandoHistorial = false;
   Map<String, dynamic>? _resultado;
+  List<dynamic> _historial = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarHistorial();
+  }
 
   Future<void> _seleccionarImagen() async {
     final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
     uploadInput.click();
-
     uploadInput.onChange.listen((event) async {
       final file = uploadInput.files?.first;
       if (file == null) return;
-
       final reader = html.FileReader();
       reader.readAsArrayBuffer(file);
       reader.onLoadEnd.listen((_) {
@@ -50,10 +56,22 @@ class _HomeScreenState extends State<HomeScreen> {
       _analizando = false;
       if (respuesta['success']) {
         _resultado = respuesta['data'];
+        _cargarHistorial();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(respuesta['message']), backgroundColor: Colors.red),
         );
+      }
+    });
+  }
+
+  Future<void> _cargarHistorial() async {
+    setState(() => _cargandoHistorial = true);
+    final respuesta = await EvaluacionService.obtenerHistorial();
+    setState(() {
+      _cargandoHistorial = false;
+      if (respuesta['success']) {
+        _historial = respuesta['data'] ?? [];
       }
     });
   }
@@ -79,6 +97,15 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'Aceptable': return '⚠️';
       case 'Deteriorado': return '❌';
       default: return '❓';
+    }
+  }
+
+  Color _colorStatus(String? status) {
+    switch (status) {
+      case 'completed': return const Color(0xFF16A34A);
+      case 'pending': return const Color(0xFFD97706);
+      case 'error': return const Color(0xFFDC2626);
+      default: return Colors.grey;
     }
   }
 
@@ -112,6 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // ── Sección de análisis ──────────────────────────────────────
                 const Text(
                   'Analizar material',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
@@ -182,6 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 28),
 
+                // ── Resultado ────────────────────────────────────────────────
                 if (_resultado != null) ...[
                   const Divider(),
                   const SizedBox(height: 20),
@@ -210,23 +239,83 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text('${_resultado!['resultado']?['porcentaje_deterioro'] ?? 0}% de deterioro', style: const TextStyle(color: Colors.grey)),
-                          if (_resultado!['resultado']?['nota'] != null) ...[
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                              ),
-                              child: Text(_resultado!['resultado']!['nota'], style: const TextStyle(color: Colors.grey, fontSize: 13), textAlign: TextAlign.center),
-                            ),
-                          ],
                         ],
                       ),
                     ),
                   ),
+                  const SizedBox(height: 28),
                 ],
+
+                // ── Historial ────────────────────────────────────────────────
+                const Divider(),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Historial de evaluaciones', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                    TextButton(
+                      onPressed: _cargarHistorial,
+                      child: const Text('🔄 Actualizar'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                if (_cargandoHistorial)
+                  const Center(child: CircularProgressIndicator())
+                else if (_historial.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: const Center(
+                      child: Text('No hay evaluaciones aún.', style: TextStyle(color: Colors.grey)),
+                    ),
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _historial.length,
+                    itemBuilder: (context, index) {
+                      final eval = _historial[index];
+                      final status = eval['status'] ?? 'pending';
+                      final fecha = eval['created_at'] != null
+                          ? eval['created_at'].toString().substring(0, 16).replaceAll('T', ' ')
+                          : 'Sin fecha';
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        child: ListTile(
+                          leading: Text(
+                            status == 'completed' ? '✅' : status == 'error' ? '❌' : '⏳',
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                          title: Text(
+                            eval['image_path'] ?? 'Imagen',
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(fecha, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _colorStatus(status).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              status,
+                              style: TextStyle(color: _colorStatus(status), fontSize: 12, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                const SizedBox(height: 24),
               ],
             ),
           ),

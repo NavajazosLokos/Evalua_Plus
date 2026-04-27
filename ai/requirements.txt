@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-anomalib
 torch
 torchvision
 pillow
