@@ -1,6 +1,0 @@
-anomalib[full]
-roboflow
-torch
-torchvision
-opencv-python
-Pillow
