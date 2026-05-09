@@ -1,0 +1,53 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: evalua_frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    container_name: evalua_backend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8888:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:1234@db:5432/evaluaplus
+      - AI_SERVICE_URL=http://ai:8001
+      - SECRET_KEY=cambia-esta-clave-en-produccion
+    depends_on:
+      - db
+      - ai
+
+  ai:
+    build: ./ai
+    container_name: evalua_ai
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./ai:/app
+    environment:
+      - TRUST_REMOTE_CODE=1
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: evalua_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: evaluaplus
+    volumes:
+      - evalua_db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+volumes:
+  evalua_db_data:
