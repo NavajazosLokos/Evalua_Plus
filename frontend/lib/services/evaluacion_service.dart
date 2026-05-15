@@ -6,6 +6,45 @@ import 'auth_service.dart';
 class EvaluacionService {
   static const String baseUrl = 'http://localhost:8888';
 
+  // ── Preprocesar imagen (recorte + filtros) ─────────────────────────────────
+  // Llama al servicio IA directamente (no pasa por el backend)
+  static const String aiUrl = 'http://localhost:8001';
+
+  static Future<Map<String, dynamic>> preprocesarImagen({
+    required Uint8List imagenBytes,
+    required String nombreArchivo,
+  }) async {
+    try {
+      final uri     = Uri.parse('$aiUrl/preprocesar');
+      final request = http.MultipartRequest('POST', uri);
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          imagenBytes,
+          filename: nombreArchivo,
+        ),
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success':        true,
+          'imagen_base64':  data['imagen_base64'],
+          'recorte_aplicado': data['recorte_aplicado'] ?? false,
+        };
+      } else {
+        return {'success': false, 'message': 'Error al preprocesar imagen.'};
+      }
+    } catch (e) {
+      // Si el servicio IA no está disponible, devolver la imagen original
+      return {'success': false, 'message': 'Servicio IA no disponible.'};
+    }
+  }
+
   // ── Analizar imagen ────────────────────────────────────────────────────────
   static Future<Map<String, dynamic>> analizarImagen({
     required Uint8List imagenBytes,
@@ -16,7 +55,7 @@ class EvaluacionService {
       return {'success': false, 'message': 'No hay sesión activa.'};
     }
 
-    final uri = Uri.parse('$baseUrl/evaluaciones/analizar');
+    final uri     = Uri.parse('$baseUrl/evaluaciones/analizar');
     final request = http.MultipartRequest('POST', uri);
 
     request.headers['Authorization'] = 'Bearer $token';
@@ -38,7 +77,7 @@ class EvaluacionService {
         return {'success': false, 'message': 'Sesión expirada. Inicia sesión de nuevo.'};
       } else {
         final error = jsonDecode(response.body);
-        return {'success': false, 'message': error['detail'] ?? 'Error al analizar la imagen.'};
+        return {'success': false, 'message': error['detail'] ?? 'Error al analizar.'};
       }
     } catch (e) {
       return {'success': false, 'message': 'No se pudo conectar con el servidor.'};
