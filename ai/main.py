@@ -11,7 +11,10 @@ import torch.nn as nn
 import torchvision.transforms as T
 from torchvision import models
 
-app = FastAPI(title="EvaluaPlus AI Service")
+app = FastAPI(
+    title="EvaluaPlus AI Service",
+    root_path="/ia"
+)
 
 EXTENSIONES_VALIDAS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif"}
 MODEL_PATH = Path("model/evalua_plus_model.pth")

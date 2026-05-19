@@ -1,14 +1,11 @@
-# Usamos Nginx como servidor estático
 FROM nginx:alpine
 
-# Borramos los archivos default de nginx
 RUN rm -rf /usr/share/nginx/html/*
+RUN rm /etc/nginx/conf.d/default.conf
 
-# Copiamos el build de Flutter Web
 COPY build/web /usr/share/nginx/html
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# Exponemos el puerto 80
 EXPOSE 80
 
-# Arrancar nginx
 CMD ["nginx", "-g", "daemon off;"]

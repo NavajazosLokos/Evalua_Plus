@@ -5,17 +5,16 @@ services:
       dockerfile: Dockerfile
     container_name: evalua_frontend
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       - backend
+      - ai
 
   backend:
     build: ./backend
     container_name: evalua_backend
     volumes:
       - ./backend:/app
-    ports:
-      - "8888:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:1234@db:5432/evaluaplus
       - AI_SERVICE_URL=http://ai:8001
@@ -27,23 +26,13 @@ services:
   ai:
     build: ./ai
     container_name: evalua_ai
-    ports:
-      - "8001:8001"
     volumes:
       - ./ai:/app
     environment:
       - TRUST_REMOTE_CODE=1
-      # ── Calibración del modelo ─────────────────────────────────────────────
-      # CALIB_OFFSET: puntos que se restan al score bruto.
-      #   Si madera perfecta da ~46 % → pon 30 para obtener ~16 % (Excelente).
-      #   Ajusta hacia arriba si sigue siendo demasiado alto.
       - CALIB_OFFSET=30
-      # CALIB_SCALE: multiplica el resultado tras el offset.
-      #   1.0 = sin cambio  |  0.8 = comprime diferencias  |  1.2 = las amplía
       - CALIB_SCALE=1.2
-      # Umbral Excelente: por debajo de este % → "Excelente"
       - UMBRAL_EXCELENTE=30
-      # Umbral Aceptable: por debajo de este % → "Aceptable" (encima → "Deteriorado")
       - UMBRAL_ACEPTABLE=60
     restart: unless-stopped
 

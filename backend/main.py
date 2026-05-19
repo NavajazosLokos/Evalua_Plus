@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.items import router as items_router
-from routers.evaluaciones import router as evaluaciones_router  # <- NUEVO
-from routers.auth import router as auth_router  # <- NUEVO
+from routers.evaluaciones import router as evaluaciones_router
+from routers.auth import router as auth_router
 
-app = FastAPI()
+app = FastAPI(root_path="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,8 +15,8 @@ app.add_middleware(
 )
 
 app.include_router(items_router)
-app.include_router(evaluaciones_router)  # <- NUEVO
-app.include_router(auth_router)  # <- NUEVO
+app.include_router(evaluaciones_router)
+app.include_router(auth_router)
 
 @app.get("/")
 def read_root():

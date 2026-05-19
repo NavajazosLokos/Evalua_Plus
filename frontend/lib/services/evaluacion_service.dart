@@ -4,11 +4,11 @@ import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 
 class EvaluacionService {
-  static const String baseUrl = 'http://localhost:8888';
+  static const String baseUrl = '/api';
 
   // ── Preprocesar imagen (recorte + filtros) ─────────────────────────────────
   // Llama al servicio IA directamente (no pasa por el backend)
-  static const String aiUrl = 'http://localhost:8001';
+  static const String aiUrl = '/ia';
 
   static Future<Map<String, dynamic>> preprocesarImagen({
     required Uint8List imagenBytes,

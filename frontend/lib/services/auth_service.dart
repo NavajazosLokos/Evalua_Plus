@@ -4,13 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   // En desarrollo apunta al backend local
-  static const String baseUrl = 'http://localhost:8888';
+  static const String baseUrl = '/api';
 
   // ── Login ──────────────────────────────────────────────────────────────────
   static Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
         'username': email,
         'password': password,
