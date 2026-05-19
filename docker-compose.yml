@@ -5,32 +5,36 @@ services:
       dockerfile: Dockerfile
     container_name: evalua_frontend
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
-      - flutter_builder
       - backend
-
-  flutter_builder:
-    image: ghcr.io/cirruslabs/flutter:latest
-    container_name: evalua_flutter_builder
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    command: >
-      bash -c "flutter pub get &&
-               flutter build web"
+      - ai
 
   backend:
     build: ./backend
     container_name: evalua_backend
     volumes:
       - ./backend:/app
-    ports:
-      - "8888:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:1234@db:5432/evaluaplus
+      - AI_SERVICE_URL=http://ai:8001
+      - SECRET_KEY=cambia-esta-clave-en-produccion
     depends_on:
       - db
+      - ai
+
+  ai:
+    build: ./ai
+    container_name: evalua_ai
+    volumes:
+      - ./ai:/app
+    environment:
+      - TRUST_REMOTE_CODE=1
+      - CALIB_OFFSET=30
+      - CALIB_SCALE=1.2
+      - UMBRAL_EXCELENTE=30
+      - UMBRAL_ACEPTABLE=60
+    restart: unless-stopped
 
   db:
     image: postgres:16
@@ -41,6 +45,10 @@ services:
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: evaluaplus
     volumes:
-      - ./db:/var/lib/postgresql/data
+      - evalua_db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+
+volumes:
+  evalua_db_data:
